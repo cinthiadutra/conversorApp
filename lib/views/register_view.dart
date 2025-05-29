@@ -35,6 +35,7 @@ class RegisterView extends StatelessWidget {
               ),
               SizedBox(height: 20),
               ElevatedButton(
+                key: const Key('register_button'),
                 onPressed: () => controller.register(),
                 child: Text('Registrar'),
               ),
