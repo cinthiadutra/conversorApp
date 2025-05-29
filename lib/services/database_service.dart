@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:mysql1/mysql1.dart';
 import '../models/conversion_model.dart';
 import '../models/user_model.dart';
@@ -5,11 +7,12 @@ import '../models/user_model.dart';
 class DatabaseService {
   Future<MySqlConnection> _getConnection() async {
     final settings = ConnectionSettings(
-      host: 'localhost',
+      host: '127.0.0.1',
       port: 3306,
       user: 'root',
-      password: 'sua_senha',
-      db: 'conversor_db',
+      password: '',
+      db: 'falepaco',
+      timeout: Duration(seconds: 50),
     );
     return await MySqlConnection.connect(settings);
   }
@@ -87,28 +90,32 @@ class DatabaseService {
         );
       }).toList();
     } catch (e) {
-      print('Erro ao buscar histórico: $e');
+      log('Erro ao buscar histórico: $e');
       return [];
     } finally {
       await conn?.close();
     }
   }
 
-  /// Cria novo usuário
-  Future<void> createUser(String username, String password) async {
-    MySqlConnection? conn;
+Future<void> createUser(String username, String password) async {
+  MySqlConnection? conn;
 
+  try {
+    conn = await _getConnection();
+    await conn.query(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
+      [username, password],
+    );
+  } catch (e) {
+    log('Erro ao criar usuário: $e');
+    rethrow; // importante para tratar na UI
+  } finally {
     try {
-      conn = await _getConnection();
-      await conn.query('INSERT INTO users (username, password) VALUES (?, ?)', [
-        username,
-        password,
-      ]);
-    } catch (e) {
-      print('Erro ao criar usuário: $e');
-      rethrow;
-    } finally {
       await conn?.close();
+    } catch (e) {
+      log('Erro ao fechar conexão: $e');
     }
   }
+}
+
 }
