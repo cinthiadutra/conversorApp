@@ -1,4 +1,5 @@
 // lib/controllers/login_controller.dart
+import 'package:conversor_app/utils/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../services/database_service.dart';
@@ -10,29 +11,27 @@ class LoginController extends GetxController {
   final isLoading = false.obs;
 
   final DatabaseService _databaseService = DatabaseService();
+  final Rx<User?> currentUser = Rx<User?>(null);
 
-  Future<void> login() async {
+ void login() async {
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
 
-    if (username.isEmpty || password.isEmpty) {
-      Get.snackbar('Erro', 'Preencha todos os campos');
-      return;
+    final user = await _databaseService.getUser(username, password);
+    if (user != null) {
+      currentUser.value = user;
+      Get.offAllNamed(AppRoutes.home);
+    } else {
+      Get.snackbar("Erro", "Usuário ou senha inválidos");
     }
+  }
 
-    isLoading.value = true;
+ void register() async {
+    final username = usernameController.text.trim();
+    final password = passwordController.text.trim();
 
-    try {
-      final User? user = await _databaseService.getUser(username, password);
-      if (user != null) {
-        Get.offAllNamed('/home');
-      } else {
-        Get.snackbar('Erro', 'Usuário ou senha inválidos');
-      }
-    } catch (e) {
-      Get.snackbar('Erro', 'Ocorreu um erro ao fazer login');
-    } finally {
-      isLoading.value = false;
-    }
+    await _databaseService.createUser(username, password);
+    Get.snackbar("Sucesso", "Usuário registrado, faça login");
+    Get.offAllNamed(AppRoutes.login);
   }
 }

@@ -1,11 +1,15 @@
 // lib/views/home_view.dart
 import 'package:conversor_app/controller/conversion_controller.dart';
+import 'package:conversor_app/utils/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../models/conversion_model.dart';
 
 class HomeView extends StatelessWidget {
   final ConversionController controller = Get.put(ConversionController());
+  final ThemeController themeController = Get.find();
+
+   HomeView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -13,6 +17,16 @@ class HomeView extends StatelessWidget {
       appBar: AppBar(
         title: Text('Conversor de Moedas'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(themeController.isDarkMode.value
+                ? Icons.light_mode
+                : Icons.dark_mode),
+            onPressed: () {
+              themeController.toggleTheme();
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

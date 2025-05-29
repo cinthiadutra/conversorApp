@@ -1,6 +1,6 @@
-// lib/controllers/conversion_controller.dart
-import 'package:get/get.dart';
+// conversion_controller.dart
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import '../services/api_service.dart';
 import '../services/database_service.dart';
 import '../models/conversion_model.dart';
@@ -9,60 +9,53 @@ class ConversionController extends GetxController {
   final ApiService _apiService = ApiService();
   final DatabaseService _databaseService = DatabaseService();
 
-  final fromCurrency = 'BRL'.obs;
-  final toCurrency = 'USD'.obs;
-  final amountController = TextEditingController();
-  final result = ''.obs;
-  final history = <ConversionModel>[].obs;
+  final TextEditingController amountController = TextEditingController();
+  final RxString fromCurrency = 'BRL'.obs;
+  final RxString toCurrency = 'USD'.obs;
+  final RxString result = ''.obs;
+  final RxList<ConversionModel> history = <ConversionModel>[].obs;
 
-  final currencies = ['BRL', 'USD', 'CAD'];
+  final List<String> currencies = ['BRL', 'USD', 'CAD'];
 
   @override
   void onInit() {
     super.onInit();
-    fetchHistory();
+    loadHistory();
   }
 
   Future<void> convertCurrency() async {
     final amountText = amountController.text;
     if (amountText.isEmpty) {
-      Get.snackbar('Erro', 'Por favor, insira um valor para converter.');
+      result.value = 'Por favor, insira um valor.';
       return;
     }
 
     final amount = double.tryParse(amountText.replaceAll(',', '.'));
     if (amount == null) {
-      Get.snackbar('Erro', 'Valor inválido.');
+      result.value = 'Valor inválido.';
       return;
     }
 
     try {
-      final conversionResult = await _apiService.convertCurrency(
-        fromCurrency.value,
-        toCurrency.value,
-        amount,
-      );
-
-      final rate = conversionResult / amount;
-
-      result.value =
-          '$amount ${fromCurrency.value} = ${conversionResult.toStringAsFixed(2)} ${toCurrency.value}';
+      final rate = await _apiService.getExchangeRate(fromCurrency.value, toCurrency.value);
+      final convertedAmount = amount * rate;
+      result.value = '${convertedAmount.toStringAsFixed(2)} ${toCurrency.value}';
 
       await _databaseService.saveConversion(
         fromCurrency.value,
         toCurrency.value,
         amount,
-        conversionResult,
+        convertedAmount,
         rate,
       );
 
-      fetchHistory();
+      loadHistory();
     } catch (e) {
-      Get.snackbar('Erro', 'Falha na conversão de moeda: $e');
+      result.value = 'Erro na conversão: $e';
     }
   }
 
-  Future<void> fetchHistory() async {
+  Future<void> loadHistory() async {
     final conversions = await _databaseService.getConversionHistory();
     history.assignAll(conversions);
   }

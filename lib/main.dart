@@ -1,29 +1,27 @@
-// lib/main.dart
+import 'package:conversor_app/utils/app_routes.dart';
+import 'package:conversor_app/utils/app_theme.dart';
+import 'package:conversor_app/utils/theme_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'views/login_view.dart';
-import 'views/home_view.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeController themeController = Get.put(ThemeController());
+
+   MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Conversor de Moedas',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      initialRoute: '/login',
-      getPages: [
-        GetPage(name: '/login', page: () => const LoginView()),
-        GetPage(name: '/home', page: () =>  HomeView()),
-      ],
-    );
+    return Obx(() => GetMaterialApp(
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeController.isDarkMode.value ? ThemeMode.dark : ThemeMode.light,
+          initialRoute: AppRoutes.login,
+          getPages: AppRoutes.pages,
+        ));
   }
 }
