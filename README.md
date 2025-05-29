@@ -79,3 +79,10 @@ Atualize as credenciais em lib/services/database_service.dart.
 flutter run
 
 ### 6. Rodar os Testes
+
+![image](https://github.com/user-attachments/assets/81b36945-4ff4-4bdb-af55-919e1fb1fa10)
+![image](https://github.com/user-attachments/assets/a0a018ac-2c2d-4013-8dc3-6daff644776a)
+![image](https://github.com/user-attachments/assets/9d7e2b34-1305-4d8a-9645-76b6860f4b25)
+
+
+
