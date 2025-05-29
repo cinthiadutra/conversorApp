@@ -51,7 +51,7 @@ class LoginView extends StatelessWidget {
                   controller.isLoading.value
                       ? const CircularProgressIndicator()
                       : ElevatedButton(
-                        onPressed: controller.login,
+                        onPressed: () => controller.login(),
                         child: const Text('Entrar'),
                       ),
             ),

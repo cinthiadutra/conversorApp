@@ -1,4 +1,6 @@
 // lib/theme/app_theme.dart
+// ignore_for_file: deprecated_member_use
+
 import 'package:flutter/material.dart';
 
 class AppTheme {
@@ -28,6 +30,11 @@ class AppTheme {
     colorScheme: ColorScheme.dark(
       primary: Colors.deepPurple,
       secondary: Colors.purpleAccent,
+    ),
+    buttonTheme: ButtonThemeData(
+      buttonColor: Colors.deepPurple,
+      textTheme: ButtonTextTheme.primary,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
     ),
     // Adicione outras personalizações conforme necessário
   );

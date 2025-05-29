@@ -1,51 +1,67 @@
 import 'dart:developer';
-
-import 'package:mysql1/mysql1.dart';
-import '../models/conversion_model.dart';
+import 'package:mysql_client/mysql_client.dart';
 import '../models/user_model.dart';
+import '../models/conversion_model.dart';
 
 class DatabaseService {
-  Future<MySqlConnection> _getConnection() async {
-    final settings = ConnectionSettings(
-      host: '127.0.0.1',
+  Future<MySQLConnection> _getConnection() async {
+    final conn = await MySQLConnection.createConnection(
+      host: '192.168.15.54',
       port: 3306,
-      user: 'root',
-      password: '',
-      db: 'falepaco',
-      timeout: Duration(seconds: 50),
+      userName: 'root',
+      password: 'cd1704',
+      databaseName: 'falepaco',
     );
-    return await MySqlConnection.connect(settings);
+    await conn.connect();
+    return conn;
   }
 
-  /// Verifica se o usuário existe no banco de dados
   Future<User?> getUser(String username, String password) async {
-    MySqlConnection? conn;
-
+    late final MySQLConnection conn;
     try {
       conn = await _getConnection();
-      final results = await conn.query(
-        'SELECT id, username, password FROM users WHERE username = ? AND password = ?',
-        [username, password],
+
+      final result = await conn.execute(
+        "SELECT id, username, password FROM users WHERE username = :username AND password = :password",
+        {"username": username, "password": password},
       );
 
-      if (results.isNotEmpty) {
-        final row = results.first;
+      if (result.numOfRows > 0) {
+        final row = result.rows.first;
         return User(
-          id: row[0] as int,
-          username: row[1] as String,
-          password: row[2] as String,
+          id: int.parse(row.colByName("id")!),
+          username: row.colByName("username")!,
+          password: row.colByName("password")!,
         );
       }
-    } catch (e) {
-      print('Erro ao buscar usuário: $e');
+    } catch (e, stack) {
+      log('Erro ao buscar usuário: $e');
+      log('❌ Stack trace: $stack');
     } finally {
-      await conn?.close();
+      await conn.close();
     }
 
     return null;
   }
 
-  /// Salva uma conversão no banco
+  Future<void> createUser(String username, String password) async {
+    late final MySQLConnection conn;
+    try {
+      conn = await _getConnection();
+
+      await conn.execute(
+        "INSERT INTO users (username, password) VALUES (:username, :password)",
+        {"username": username, "password": password},
+      );
+    } catch (e, stack) {
+      log('Erro ao criar usuário: $e');
+      log('❌ Stack trace: $stack');
+      rethrow;
+    } finally {
+      await conn.close();
+    }
+  }
+
   Future<void> saveConversion(
     String from,
     String to,
@@ -53,69 +69,51 @@ class DatabaseService {
     double result,
     double rate,
   ) async {
-    MySqlConnection? conn;
-
+    final conn = await _getConnection();
     try {
-      conn = await _getConnection();
-      await conn.query(
-        'INSERT INTO conversions (from_currency, to_currency, amount, result, rate, date) VALUES (?, ?, ?, ?, ?, NOW())',
-        [from, to, amount, result, rate],
+      await conn.execute(
+        '''
+        INSERT INTO conversions 
+        (from_currency, to_currency, amount, result, rate, date) 
+        VALUES (:from, :to, :amount, :result, :rate, NOW())
+        ''',
+        {
+          "from": from,
+          "to": to,
+          "amount": amount.toString(),
+          "result": result.toString(),
+          "rate": rate.toString(),
+        },
       );
     } catch (e) {
-      print('Erro ao salvar conversão: $e');
-      rethrow;
+      log('Erro ao salvar conversão: $e');
     } finally {
-      await conn?.close();
+      await conn.close();
     }
   }
 
-  /// Recupera o histórico de conversões
   Future<List<ConversionModel>> getConversionHistory() async {
-    MySqlConnection? conn;
-
+    final conn = await _getConnection();
     try {
-      conn = await _getConnection();
-      final results = await conn.query(
+      final result = await conn.execute(
         'SELECT from_currency, to_currency, amount, result, rate, date FROM conversions ORDER BY date DESC',
       );
 
-      return results.map((row) {
+      return result.rows.map((row) {
         return ConversionModel(
-          fromCurrency: row[0] as String,
-          toCurrency: row[1] as String,
-          amount: row[2] as double,
-          result: row[3] as double,
-          rate: row[4] as double,
-          date: row[5] as DateTime,
+          fromCurrency: row.colByName("from_currency")!,
+          toCurrency: row.colByName("to_currency")!,
+          amount: double.parse(row.colByName("amount")!),
+          result: double.parse(row.colByName("result")!),
+          rate: double.parse(row.colByName("rate")!),
+          date: DateTime.parse(row.colByName("date")!),
         );
       }).toList();
     } catch (e) {
       log('Erro ao buscar histórico: $e');
       return [];
     } finally {
-      await conn?.close();
+      await conn.close();
     }
   }
-
-Future<void> createUser(String username, String password) async {
-  MySqlConnection? conn;
-
-  try {
-    conn = await _getConnection();
-    await conn.query(
-      'INSERT INTO users (username, password) VALUES (?, ?)',
-      [username, password],
-    );
-  } catch (e) {
-    log('Erro ao criar usuário: $e');
-    rethrow; // importante para tratar na UI
-  } finally {
-    try {
-      await conn?.close();
-    } catch (e) {
-      log('Erro ao fechar conexão: $e');
-    }
-  }
-}
-
 }

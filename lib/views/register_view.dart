@@ -12,25 +12,34 @@ class RegisterView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text('Registrar'), centerTitle: true),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: controller.usernameController,
-              decoration: InputDecoration(labelText: 'Usuário'),
-            ),
-            SizedBox(height: 10),
-            TextField(
-              controller: controller.passwordController,
-              obscureText: true,
-              decoration: InputDecoration(labelText: 'Senha'),
-            ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () => controller.register(),
-              child: Text('Registrar'),
-            ),
-          ],
+        padding: const EdgeInsets.all(20.0),
+        child: Center(
+          child: Column(
+            children: [
+              Image.asset('assets/images/logo.png', height: 100),
+
+              Text(
+                "Faça seu cadastro",
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 20),
+              TextField(
+                controller: controller.usernameController,
+                decoration: InputDecoration(labelText: 'Usuário'),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: controller.passwordController,
+                obscureText: true,
+                decoration: InputDecoration(labelText: 'Senha'),
+              ),
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => controller.register(),
+                child: Text('Registrar'),
+              ),
+            ],
+          ),
         ),
       ),
     );
